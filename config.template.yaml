@@ -1,0 +1,8 @@
+cognito:
+  client_id:
+  client_secret:
+  redirect_url: # Redirect back to frontend
+  issuer_url:
+
+server:
+  port:
