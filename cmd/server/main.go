@@ -23,7 +23,7 @@ func main() {
 
 	// CORS configuration
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:5174"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:5174", "https://audry-snippy-humanely.ngrok-free.dev"},
 		AllowMethods:     []string{"POST", "GET", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -34,6 +34,11 @@ func main() {
 	r.MaxMultipartMemory = 50 << 20
 
 	// Initialize infrastructure
+	db, err := infra.NewSQLiteDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
 	flpResolver := infra.NewFLPResolver("infra/flp_resolver.py")
 	authClient, err := infra.NewRealCognitoClient(
 		cfg.Cognito.ClientID,
@@ -45,11 +50,16 @@ func main() {
 		log.Fatalf("Failed to initialize Cognito client: %v", err)
 	}
 
+	// Initialize repositories
+	projectRepo := infra.NewGORMProjectRepository(db)
+	tagRepo := infra.NewGORMTagRepository(db)
+
 	// Initialize application usecases
 	resolveFLPUseCase := usecase.NewResolveFLPUseCase(flpResolver)
+	projectUseCase := usecase.NewProjectUseCase(projectRepo, tagRepo, flpResolver)
 
 	// Initialize handlers
-	handler := api.NewHandler(resolveFLPUseCase, authClient)
+	handler := api.NewHandler(projectUseCase, resolveFLPUseCase, authClient)
 
 	// Register routes
 	handler.RegisterRoutes(r)
@@ -57,4 +67,3 @@ func main() {
 	fmt.Printf("Server starting on :%s\n", cfg.Server.Port)
 	r.Run(":" + cfg.Server.Port)
 }
-

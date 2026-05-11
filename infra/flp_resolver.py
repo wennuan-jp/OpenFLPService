@@ -50,7 +50,10 @@ def resolve_flp(file_path):
                         "type": "Effect"
                     })
 
-        return {"plugins": plugins, "error": None}
+        return {
+            "plugins": plugins,
+            "error": None
+        }
     except Exception as e:
         return {"plugins": [], "error": str(e)}
 

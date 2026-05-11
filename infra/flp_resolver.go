@@ -51,6 +51,9 @@ func (r *flpResolver) Resolve(filePath string) (*model.ResolutionResult, error) 
 		return nil, fmt.Errorf("resolver error: %s", result.Error)
 	}
 
+	// Update PluginsCount
+	result.PluginsCount = len(result.Plugins)
+
 	return &result, nil
 }
 
